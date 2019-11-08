@@ -1,0 +1,8 @@
+# Python cache
+*__pycache__*
+*pytest_cache*
+
+# Datasete
+*.db
+*.csv
+*.txt
