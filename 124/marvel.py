@@ -40,15 +40,8 @@ def most_popular_characters(characters=characters, top=5):
     """Get the most popular character by number of appearances,
        return top n characters (default 5)
     """
-    def appearances_to_int(appearances):
-        try:
-            return int(appearances)
-        except ValueError:
-            return 0
-
-    name_appearances = [(character.name,
-                        appearances_to_int(character.appearances)) \
-                        for character in characters]
+    name_appearances = ((character.name, int(character.appearances)) 
+                    for character in characters if character.appearances)
     name_descending_appearances = sorted(name_appearances, reverse=True,
                                             key=lambda x : x[1])
     names, _ = zip(*name_descending_appearances)
@@ -64,13 +57,10 @@ def max_and_min_years_new_characters(characters=characters):
        characters, or the 'year' attribute of the namedtuple, return a tuple
        of (max_year, min_year)
     """
-    year_number_new_characters = Counter()
-    for character in characters:
-        year_number_new_characters[character.year] +=1
-    # Delete unknown year
-    del year_number_new_characters['']
-    max_year = year_number_new_characters.most_common()[0][0]
-    min_year = year_number_new_characters.most_common()[-1][0]
+    year_counts = Counter(character.year for character in characters 
+                                                         if character.year)
+    max_year = year_counts.most_common(1)[0][0]
+    min_year = year_counts.most_common()[-1][0]
     return (max_year, min_year)
 
 
@@ -82,15 +72,10 @@ def get_percentage_female_characters(characters=characters):
        Agender and Genderfluid Characters.
        Return the result rounded to 2 digits
     """
-    gender_number_characters = Counter()
-    for character in characters:
-        gender_number_characters[character.sex] += 1
-
-    # Delete unknown gender
-    del gender_number_characters['']
-
-    number_female = gender_number_characters['Female Characters']
-    number_with_gender = sum(gender_number_characters.values())
+    gender_counts = Counter(character.sex for character in characters 
+                                            if character.sex)
+    number_female = gender_counts['Female Characters']
+    number_with_gender = sum(gender_counts.values())
     percentage_female = 100 * number_female / number_with_gender
 
     return round(percentage_female, 2)
