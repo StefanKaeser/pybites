@@ -18,11 +18,12 @@ def get_today():
 @contextmanager
 def timeit():
     start = time()
-    try:
-        yield None
-    finally:
-        duration = time() - start
-        if duration > OPERATION_THRESHOLD_IN_SECONDS:
-            violations[get_today()] += 1
-            if violations[get_today()] >= 3:
-                print(ALERT_MSG)
+    
+    yield
+
+    duration = time() - start
+    if duration > OPERATION_THRESHOLD_IN_SECONDS:
+        today = get_today()
+        violations[today] += 1
+        if violations[today] >= ALERT_THRESHOLD:
+            print(ALERT_MSG)
