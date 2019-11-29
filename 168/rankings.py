@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
+from functools import total_ordering
 import bisect
 
 bites: List[int] = [283, 282, 281, 263, 255, 230, 216, 204, 197, 196, 195]
@@ -19,6 +20,7 @@ names: List[str] = [
 
 
 @dataclass
+@total_ordering  # Only need to define __lt__, decorator does the rest.
 class Ninja:
     """
     The Ninja class will have the following features:
@@ -41,9 +43,6 @@ class Ninja:
     def __lt__(self, other):
         return self.bites < other.bites
 
-    def __gt__(self, other):
-        return self.bites > other.bites
-
 
 @dataclass
 class Rankings:
@@ -62,7 +61,7 @@ class Rankings:
     returns List containing tuples of the paired up Ninja objects
     """
 
-    _rankings: list = field(default_factory=list)
+    _rankings: List[Ninja] = field(default_factory=list)
 
     def add(self, ninja):
         # Use bisct to keep the list in an ordered state
