@@ -1,21 +1,18 @@
+import textwrap
+import itertools
+
 COL_WIDTH = 20
 
 
-def cut_words_from_line(line, width=COL_WIDTH):
-    if len(line) <= width:
-        return line + " " * (width - len(line)), ""
-    cut = width
-    while line[cut] != " ":
-        cut -= 1
-    return line[:cut] + " " * (width - cut), line[cut:].strip()
+def _pad(string, width=COL_WIDTH):
+    length = len(string)
+    if length > width:
+        raise ValueError
+    return string + " " * (width - length)
 
 
-def cut_line_in_rows(line, width=COL_WIDTH):
-    rows = []
-    while line != "":
-        row, line = cut_words_from_line(line, width=COL_WIDTH)
-        rows.append(row)
-    return rows
+def _pad_list(lst, width=COL_WIDTH):
+    return [_pad(line) for line in lst]
 
 
 def text_to_columns(text):
@@ -25,6 +22,10 @@ def text_to_columns(text):
        line1\nline2\nline3\n ... etc ...
        See also the tests for more info."""
     paragraphs = [paragraph.strip() for paragraph in text.split("\n\n")]
-    rows = [cut_line_in_rows(paragraph) for paragraph in paragraphs]
-    rows = ["\t".join(row) for row in zip(*rows)]
+    rows = [textwrap.wrap(paragraph.strip(), COL_WIDTH) for paragraph in paragraphs]
+    rows = [_pad_list(row) for row in rows]
+    rows = [
+        "\t".join(row)
+        for row in itertools.zip_longest(*rows, fillvalue=" " * COL_WIDTH)
+    ]
     return "\n".join(rows)
