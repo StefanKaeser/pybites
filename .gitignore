@@ -9,6 +9,7 @@
 *.ini
 *.json
 *.xml
+*.xlsx
 log
 course_timings
 feed
