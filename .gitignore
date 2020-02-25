@@ -10,6 +10,7 @@
 *.json
 *.xml
 *.xlsx
+*.html
 log
 course_timings
 feed
