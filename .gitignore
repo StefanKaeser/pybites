@@ -11,6 +11,7 @@
 *.xml
 *.xlsx
 *.html
+*.logs
 log
 course_timings
 feed
