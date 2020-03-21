@@ -112,7 +112,6 @@ def test_rcp_stats(rcp, capfd):
     for candidate in output[3:-1]:
         name, votes = candidate.strip().split(": ")
         candidates[name] = float(votes)
-    print(candidates)
     assert candidates["Biden"] == expected["Biden"]
     assert candidates["Sanders"] == expected["Sanders"]
     assert candidates["Gabbard"] == expected["Gabbard"]
@@ -121,6 +120,7 @@ def test_rcp_stats(rcp, capfd):
 def test_nyt(nyt, capfd):
     nyt.stats()
     output = capfd.readouterr()[0].splitlines()
+    print(output)
     assert f"{'=' * 33}" in output
     assert f"{'-' * 33}" in output
     assert "National Polling Average: 29%" in output

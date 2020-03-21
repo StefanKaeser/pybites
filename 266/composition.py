@@ -100,7 +100,7 @@ class Web:
         Returns:
             Soup -- BeautifulSoup object created from the File.
         """
-        return Soup(self.file.data, "html.parser")
+        return Soup(self.data, "html.parser")
 
 
 class Site(ABC):
@@ -247,28 +247,21 @@ class RealClearPolitics(Site):
             List[Poll] -- List of Poll namedtuples that were created from the
                 table data.
         """
-        texts = (tag.text for tag in table.find_all("td"))
+        rows = table.find_all("tr")[1:]
 
-        ROW_LENGTH = 7
         polls = []
-        while True:
-            row = tuple(itertools.islice(texts, ROW_LENGTH))
-            try:
-                poll, time_stamp, sample, biden, sanders, gabbard, spread = row
-            except ValueError:
-                break
+        for row in rows:
+            columns = [tag.text for tag in row.find_all("td")]
+            poll, time_stamp, sample, biden, sanders, gabbard, spread = columns
 
             start, end = [d.split("/") for d in time_stamp.split("-")]
             start = date(year=YEAR, month=int(start[0]), day=int(start[1]))
             end = date(year=YEAR, month=int(end[0]), day=int(end[1]))
 
-            biden = float(biden)
-            sanders = float(sanders)
-            try:
-                gabbard = float(gabbard)
-            except ValueError:
-                gabbard = 0.0
-
+            biden = float(biden) if biden.isdigit() else 0.0
+            sanders = float(sanders) if sanders.isdigit() else 0.0
+            gabbard = float(gabbard) if gabbard.isdigit() else 0.0
+        
             poll = Poll(poll, (start, end), sample, sanders, biden, gabbard, spread,)
             polls.append(poll)
             
@@ -301,16 +294,16 @@ class RealClearPolitics(Site):
             representation.
 
         """
-        polls = self.polls(loc)
-        biden = Candidate("Biden", sum([poll.Biden for poll in polls[1:]]))
-        sanders = Candidate("Sanders", sum([poll.Sanders for poll in polls[1:]]))
-        gabbard = Candidate("Gabbard", sum([poll.Gabbard for poll in polls[1:]]))
+        polls = self.polls(loc)[1:] # No average
+        biden = Candidate("Biden", sum([poll.Biden for poll in polls]))
+        sanders = Candidate("Sanders", sum([poll.Sanders for poll in polls]))
+        gabbard = Candidate("Gabbard", sum([poll.Gabbard for poll in polls]))
 
         stats = "\nRealClearPolitics\n"
-        stats += "="*(len(stats)-2) + "\n"
-        stats += f"{biden.name}: {biden.votes}\n"
-        stats += f"{sanders.name}: {sanders.votes}\n"
-        stats += f"{gabbard.name}: {gabbard.votes}\n"
+        stats += "="*(len(stats.strip())) + "\n"
+        stats += f"{biden.name:>8}: {biden.votes}\n"
+        stats += f"{sanders.name:>8}: {sanders.votes}\n"
+        stats += f"{gabbard.name:>8}: {gabbard.votes}\n"
 
         print(stats)
         
@@ -367,7 +360,26 @@ class NYTimes(Site):
             List[LeaderBoard] -- List of LeaderBoard namedtuples that were created from
             the table data.
         """
-        pass
+        rows = table.find_all("tr")[1:]
+        NUM_CANDIDATES = 3
+        leaderboards = []
+        for row in rows[:NUM_CANDIDATES]:
+            tags = [tag for tag in row.find_all('td')]
+            texts = [tag.text for tag in tags] 
+            _, average, delegates, contributions, coverage = texts
+            # Extract name seperatley cause there are 2 representations, only need 1.
+            name = tags[0].find("span").text
+            
+            average = average.strip()
+            delegates = int(delegates)
+            contributions = contributions.strip()
+            coverage = int(coverage.replace("#", ""))
+
+            leaderboard = LeaderBoard(name, average, delegates, contributions, coverage)
+            leaderboards.append(leaderboard)
+
+        return leaderboards
+
 
     def polls(self, table: int = 0) -> List[LeaderBoard]:
         """Parses the data
@@ -384,7 +396,8 @@ class NYTimes(Site):
             List[LeaderBoard] -- List of LeaderBoard namedtuples that were created from
                 the table data.
         """
-        pass
+        table = self.find_table(table)
+        return self.parse_rows(table)
 
     def stats(self, loc: int = 0):
         """Produces the stats from the polls.
@@ -393,7 +406,21 @@ class NYTimes(Site):
             loc {int} -- Formats the results from polls into a more user friendly
             representation.
         """
-        pass
+        leaderboards = self.polls(loc)
+
+        stats = "\nNYTimes\n"
+        stats += "="*33
+
+        for name, average, delegates, contributions, coverage in leaderboards:
+            stats += f"\n\n{name}\n"
+            stats += "-"*33
+            stats += f"\n{'National Polling Average':>24}: {average}"
+            stats += f"\n{'Pledged Delegates':>24}: {delegates}"
+            stats += f"\n{'Individual Contributions':>24}: {contributions}"
+            stats += f"\n{'Weekly News Coverage':>24}: {coverage}"
+
+
+        print(stats)
 
 
 def gather_data():
