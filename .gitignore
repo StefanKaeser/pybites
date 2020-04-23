@@ -12,6 +12,7 @@
 *.xlsx
 *.html
 *.logs
+*.pkl
 log
 course_timings
 feed
